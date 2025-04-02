@@ -3,6 +3,8 @@ mod fuzzer;
 mod sender;
 mod wordlist;
 mod logger;
+mod filter;
+mod url;
 
 use args::Args;
 use fuzzer::Fuzzer;
@@ -11,10 +13,6 @@ use clap::Parser;
 fn main() {
     let args = Args::parse();
 
-    let mut fuzzer = match Fuzzer::new(&args) {
-        Ok(fuzzer) => fuzzer,
-        Err(e) => panic!("{e}"),
-    };
-
+    let mut fuzzer = Fuzzer::new(&args);
     fuzzer.fuzz();
 }

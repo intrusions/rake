@@ -5,7 +5,7 @@ pub struct Args {
     /// Target URL to fuzz.
     /// The `{}` placeholder in the URL will be replaced by payloads.
     /// 
-    /// Example: `www.rake.io/pages/{}`
+    /// Example: `https://rake.io/pages/{}`
     #[arg(short = 'u', long = "url")]
     #[arg(required = true)]
     pub url: String,

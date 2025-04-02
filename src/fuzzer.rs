@@ -2,80 +2,70 @@ use crate::args::Args;
 use crate::wordlist::Wordlist;
 use crate::sender::Sender;
 use crate::logger::Logger;
+use crate::url::Url;
 
-use std::sync::{Arc, Mutex};
 use crossbeam::thread;
+use std::sync::{
+    Arc,
+    Mutex
+};
 
 pub struct Fuzzer {
-    /// Wordlist used to generate payloads.
     pub wordlist: Wordlist,
-    /// Sender responsible for sending HTTP requests.
     pub sender: Sender,
-    /// Logger to record responses.
+    pub url: Url,
     pub logger: Logger,
-    /// Target URL template containing `{}` as a placeholder for payloads.
-    pub url: String,
 }
 
 impl Fuzzer {
-    /// Creates a new `Fuzzer` instance.
-    ///
-    /// # Arguments
-    /// * `args` - Command-line arguments.
-    ///
-    /// # Returns
-    /// * `Ok(Self)` - On success.
-    /// * `Err(e)` - If initialization fails.
-    pub fn new(args: &Args) -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(Self {
-            wordlist: Wordlist::new(&args.wordlist)?,
-            sender: Sender::new(&args)?,
-            logger: Logger::new(&args),
-            url: args.url.clone(),
-        })
+    pub fn new(args: &Args) -> Self {
+        
+        let wordlist = match Wordlist::new(&args.wordlist) {
+            Ok(wl) => wl,
+            Err(e) => panic!("Fatal error: {e}"),
+        };
+
+        let sender = match Sender::new(&args) {
+            Ok(sender) => sender,
+            Err(e) => panic!("Fatal error: {e}"),
+        };
+
+        let url = match Url::new(&args.url) {
+            Ok(url) => url,
+            Err(e) => panic!("Fatal error: {e}"),
+        };
+
+        let logger = Logger::new(&args);
+        
+        Self { wordlist, sender, url, logger }
     }
 
-    /// Starts the fuzzing process with multiple threads.
-    ///
-    /// Each thread retrieves a chunk of words from the wordlist, replaces `{}` in the URL,
-    /// sends requests, and logs responses. When a thread finishes a chunk, it retrieves the next one.
     pub fn fuzz(&mut self) {
-        // Shared wordlist wrapped in a thread-safe Mutex to allow controlled access.
         let wordlist = Arc::new(Mutex::new(&mut self.wordlist));
-        // Shared references to sender and logger, as they are immutable.
         let sender = Arc::new(&self.sender);
         let logger = Arc::new(&self.logger);
-        let url_template = Arc::new(self.url.clone());
+        let url_template = Arc::new(self.url.str.clone());
 
-        // Define the number of threads to use for fuzzing.
         let num_threads = 60;
 
-        // Create a thread pool using `crossbeam::thread::scope`
         thread::scope(|s| {
             for _ in 0..num_threads {
-                // Clone the shared references for each thread.
                 let wordlist = Arc::clone(&wordlist);
                 let sender = Arc::clone(&sender);
                 let logger = Arc::clone(&logger);
                 let url_template = Arc::clone(&url_template);
 
                 s.spawn(move |_| {
-                    // Each thread continuously fetches chunks until no more are available.
                     while let Ok(mut wl) = wordlist.lock() {
-                        // Try to load the next chunk, stop if no more data.
                         if wl.load_next_chunk().is_err() {
                             break;
                         }
-                        // Clone the chunk to avoid holding the lock while processing.
                         let chunk = wl.chunk.clone();
-                        drop(wl); // Release lock before processing the chunk.
-
-                        // Process each word in the chunk.
+                        drop(wl);
+                        
                         for payload in chunk.iter() {
-                            // Replace `{}` in the URL with the current payload.
                             let url = url_template.replace("{}", payload);
                             
-                            // Send the request and log the response.
                             match sender.send(&url) {
                                 Ok(response) => logger.log_response(response, &url),
                                 Err(e) => eprintln!("Error: {}", e),

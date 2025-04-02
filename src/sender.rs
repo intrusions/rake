@@ -1,9 +1,16 @@
-use reqwest::{blocking::{Client, Response}, Error};
-use std::time::Duration;
 use crate::args::Args;
 
+use std::time::Duration;
+use reqwest::{
+    blocking::{
+        Client, 
+        Response,
+    }, 
+    Error
+};
+
 pub struct Sender {
-    pub client: Client,
+    client: Client,
 }
 
 impl Sender {
@@ -13,15 +20,10 @@ impl Sender {
             .user_agent(&args.user_agent)
             .build()?;
         
-        Ok(Self {
-            client: client,
-        })
+        Ok(Self { client })
     }
 
     pub fn send(&self, url: &String) -> Result<Response, Error> {
-        match self.client.get(url).send() {
-            Ok(response) => Ok(response),
-            Err(e) => Err(e),
-        }
+        self.client.get(url).send()
     }
 }
