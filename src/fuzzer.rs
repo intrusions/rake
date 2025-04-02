@@ -48,7 +48,7 @@ impl Fuzzer {
         let url_template = Arc::new(self.url.clone());
 
         // Define the number of threads to use for fuzzing.
-        let num_threads = 30;
+        let num_threads = 60;
 
         // Create a thread pool using `crossbeam::thread::scope`
         thread::scope(|s| {
@@ -77,7 +77,7 @@ impl Fuzzer {
                             
                             // Send the request and log the response.
                             match sender.send(&url) {
-                                Ok(response) => logger.print_line(response, &url),
+                                Ok(response) => logger.log_response(response, &url),
                                 Err(e) => eprintln!("Error: {}", e),
                             }
                         }

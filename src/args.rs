@@ -37,12 +37,14 @@ pub struct Args {
     /// List of HTTP status codes to ignore.
     /// 
     /// Example: `404,403` will exclude responses with status 404 or 403.
-    #[arg(short = 'x', long = "exclude")]
+    #[arg(short = 'c', long = "exclude-code")]
     #[arg(num_args = 1.., value_delimiter = ',')]
     pub exclude_codes: Vec<u16>,
 
-    /// Enable verbose mode.
-    /// Logs all sent requests.
-    #[arg(short = 'v', long = "verbose")]
-    pub verbose: bool,
+    /// List of content size to ignore.
+    /// 
+    /// Example: `1000,1001` will exclude responses with content size of 1000 or 1001.
+    #[arg(short = 's', long = "exclude-size")]
+    #[arg(num_args = 1.., value_delimiter = ',')]
+    pub exclude_size: Vec<u64>,
 }
