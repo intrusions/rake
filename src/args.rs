@@ -1,7 +1,8 @@
 use clap::Parser;
+use fuzzer::args::FuzzerArgs;
 
 #[derive(Parser)]
-pub struct Args {
+pub struct ArgsSchema {
     /// Target URL to fuzz.
     /// The `{}` placeholder in the URL will be replaced by payloads.
     /// 
@@ -46,5 +47,19 @@ pub struct Args {
     /// Example: `1000,1001` will exclude responses with content size of 1000 or 1001.
     #[arg(short = 's', long = "exclude-size")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    pub exclude_size: Vec<u64>,
+    pub exclude_size: Vec<u64>, 
+}
+
+impl From<ArgsSchema> for FuzzerArgs {
+    fn from(args: ArgsSchema) -> FuzzerArgs {
+        FuzzerArgs {
+            url: args.url,
+            wordlist: args.wordlist,
+            timing: args.timing,
+            timeout: args.timeout,
+            user_agent: args.user_agent,
+            exclude_codes: args.exclude_codes,
+            exclude_size: args.exclude_size
+        }
+    }
 }

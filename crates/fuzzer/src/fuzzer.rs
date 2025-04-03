@@ -1,50 +1,36 @@
-use crate::args::Args;
-use crate::wordlist::Wordlist;
-use crate::sender::Sender;
+use crate::args::FuzzerArgs;
 use crate::logger::Logger;
-use crate::url::Url;
 
+use wordlist::{Wordlist, WordlistArgs};
+use sender::{Sender, SenderArgs};
+use std::sync::{Arc, Mutex};
 use crossbeam::thread;
-use std::sync::{
-    Arc,
-    Mutex
-};
 
 pub struct Fuzzer {
     pub wordlist: Wordlist,
     pub sender: Sender,
-    pub url: Url,
     pub logger: Logger,
 }
 
 impl Fuzzer {
-    pub fn new(args: &Args) -> Self {
+    pub fn new(args: &FuzzerArgs) -> Self {
         
-        let wordlist = match Wordlist::new(&args.wordlist) {
-            Ok(wl) => wl,
-            Err(e) => panic!("Fatal error: {e}"),
-        };
-
-        let sender = match Sender::new(&args) {
-            Ok(sender) => sender,
-            Err(e) => panic!("Fatal error: {e}"),
-        };
-
-        let url = match Url::new(&args.url) {
-            Ok(url) => url,
-            Err(e) => panic!("Fatal error: {e}"),
-        };
-
-        let logger = Logger::new(&args);
+        let wordlist = Wordlist::new(WordlistArgs::from(args))
+            .unwrap_or_else(|e| panic!("Fatal error: {}", e.as_str()));
         
-        Self { wordlist, sender, url, logger }
+        let sender = Sender::new(SenderArgs::from(args))
+            .unwrap_or_else(|e| panic!("Fatal error: {}", e.as_str()));
+
+        let logger = Logger::new(args);
+        
+        Self { wordlist, sender, logger }
     }
 
     pub fn fuzz(&mut self) {
         let wordlist = Arc::new(Mutex::new(&mut self.wordlist));
         let sender = Arc::new(&self.sender);
         let logger = Arc::new(&self.logger);
-        let url_template = Arc::new(self.url.str.clone());
+        let url_template = Arc::new(self.sender.args.url.clone());
 
         let num_threads = 60;
 

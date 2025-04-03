@@ -1,4 +1,4 @@
-use crate::Args;
+use crate::args::FuzzerArgs;
 use crate::filter::{
     ResponseFilter,
     StatusCodeFilter,
@@ -13,7 +13,7 @@ pub struct Logger {
 }
 
 impl Logger {
-    pub fn new(args: &Args) -> Self {
+    pub fn new(args: &FuzzerArgs) -> Self {
         Self::headers(args);
 
         let mut logger = Self { filters: Vec::new() };
@@ -24,7 +24,7 @@ impl Logger {
         logger
     }
 
-    pub fn headers(args: &Args) {
+    pub fn headers(args: &FuzzerArgs) {
         println!("*=================================================*");
         println!();
 
@@ -39,7 +39,7 @@ impl Logger {
 
         println!("*=================================================*");
         println!();
-        println!("{:<6} {:<8} {}", "STATUS", "SIZE", "URL");
+        println!("{:<6} {:<8} URL", "STATUS", "SIZE");
     }
 
     fn status_formatter(status: u16) -> ColoredString {

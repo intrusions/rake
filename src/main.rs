@@ -1,18 +1,12 @@
-mod args;
-mod fuzzer;
-mod sender;
-mod wordlist;
-mod logger;
-mod filter;
-mod url;
-
-use args::Args;
-use fuzzer::Fuzzer;
+use args::ArgsSchema;
+use fuzzer::{fuzzer::Fuzzer, args::FuzzerArgs};
 use clap::Parser;
 
-fn main() {
-    let args = Args::parse();
+mod args;
 
-    let mut fuzzer = Fuzzer::new(&args);
+fn main() {
+    let args_schema = ArgsSchema::parse();
+
+    let mut fuzzer = Fuzzer::new(&FuzzerArgs::from(args_schema));
     fuzzer.fuzz();
 }
