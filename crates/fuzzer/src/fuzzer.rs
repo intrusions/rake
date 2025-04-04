@@ -48,13 +48,16 @@ impl Fuzzer {
                 let url_template = Arc::clone(&url_template);
 
                 s.spawn(move |_| {
-                    while let Ok(mut wl) = reader.lock() {
-                        if let Ok(false) = wl.load_next_chunk() {
-                            break;
-                        }
+                    while let Ok(mut reader) = reader.lock() {
+                        let chunk = match reader.get_next_chunk() {
+                            Ok(chunk) => chunk,
+                            Err(_) => {
+                                drop(reader);
+                                break;
+                            }
+                        };
 
-                        let chunk = wl.chunk.clone();
-                        drop(wl);
+                        drop(reader);
                         
                         for word in chunk.iter() {
                             let url = url_template.replace("{}", word);

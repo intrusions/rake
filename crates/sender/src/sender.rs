@@ -10,6 +10,7 @@ pub struct Sender {
     pub args: SenderArgs
 }
 
+#[derive(Debug)]
 pub enum SenderError {
     Builder,
     Unreachable

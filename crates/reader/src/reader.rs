@@ -4,8 +4,11 @@ use std::{
     io::{self, ErrorKind, BufRead, BufReader}
 };
 
+#[derive(Debug)]
 pub enum ReaderError {
     FileNotFound,
+    EmptyChunk,
+    NonUTF8,
     Io(io::Error)
 }
 
@@ -13,6 +16,8 @@ impl ReaderError {
     pub fn as_str(&self) -> &'static str {
         match self {
             ReaderError::FileNotFound => "Wordlist file not found",
+            ReaderError::EmptyChunk => "Empty chunk",
+            ReaderError::NonUTF8 => "Invalid non UTF8 character present in the file",
             ReaderError::Io(_) => "IO Error"
         }
     }
@@ -28,13 +33,12 @@ impl From<io::Error> for ReaderError {
     }
 }
 
-#[allow(dead_code)]
 pub struct Reader {
     reader: BufReader<File>,
-    pub chunk: Vec<String>,
-    args: ReaderArgs,
     chunk_size: usize,
 }
+
+const CHAR_PER_LINE: usize = 50;
 
 impl Reader {
     pub fn new(args: ReaderArgs) -> Result<Self, ReaderError> {
@@ -43,49 +47,42 @@ impl Reader {
         let chunk_size = std::cmp::max(1, line_count / args.threads as usize);
     
         let reader = Self {
-            reader: BufReader::with_capacity(chunk_size * 50, file),
-            chunk: Vec::new(),
-            chunk_size,
-            args,
+            reader: BufReader::with_capacity(chunk_size * CHAR_PER_LINE, file),
+            chunk_size
         };
     
         Ok(reader)
     }
 
-    pub fn load_next_chunk(&mut self) -> Result<bool, ReaderError> {
+    pub fn get_next_chunk(&mut self) -> Result<Vec<String>, ReaderError> {
         let mut line = String::new();
         let mut chunk = Vec::new();
     
         for _ in 0..self.chunk_size {
             line.clear();
             
-            let bytes = self.reader.read_line(&mut line)?;
-            if bytes == 0 {
+            let size = match self.reader.read_line(&mut line) {
+                Ok(size) => size,
+                Err(_) => break
+            };
+            
+            if size == 0 {
                 break;
             }
-            
+
             chunk.push(line.to_string());
         }
-    
-        self.chunk = chunk;
-        Ok(!self.chunk.is_empty())
+        
+        match !chunk.is_empty() {
+            true => Ok(chunk),
+            false => Err(ReaderError::EmptyChunk)
+        }
     }
     
     fn count_lines<P: AsRef<std::path::Path>>(path: P) -> Result<usize, ReaderError> {
         let file = File::open(path).unwrap();
         let reader = BufReader::new(file);
+        
         Ok(reader.lines().count())
-    }
-
-    pub fn is_finished(&self) -> bool {
-        self.chunk.is_empty()
-    }
-
-    pub fn get_by_index(&self, index: usize) -> Option<&str> {
-        self.chunk.get(index).map(String::as_str)
-    }
-
-    pub fn current_chunk_len(&self) -> usize {
-        self.chunk.len()
     }
 }
