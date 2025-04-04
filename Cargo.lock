@@ -386,11 +386,11 @@ dependencies = [
 name = "fuzzer"
 version = "0.1.0"
 dependencies = [
- "colored",
  "crossbeam",
+ "logger",
+ "reader",
  "reqwest",
  "sender",
- "wordlist",
 ]
 
 [[package]]
@@ -768,6 +768,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
+name = "logger"
+version = "0.1.0"
+dependencies = [
+ "colored",
+ "reqwest",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -930,6 +938,10 @@ dependencies = [
  "clap",
  "fuzzer",
 ]
+
+[[package]]
+name = "reader"
+version = "0.1.0"
 
 [[package]]
 name = "reqwest"
@@ -1708,10 +1720,6 @@ checksum = "6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1"
 dependencies = [
  "bitflags",
 ]
-
-[[package]]
-name = "wordlist"
-version = "0.1.0"
 
 [[package]]
 name = "write16"

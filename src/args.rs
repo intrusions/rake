@@ -1,5 +1,5 @@
 use clap::Parser;
-use fuzzer::args::FuzzerArgs;
+use fuzzer::FuzzerArgs;
 
 #[derive(Parser)]
 pub struct ArgsSchema {

@@ -6,8 +6,9 @@ edition = "2024"
 [workspace]
 members = [
     "crates/fuzzer",
-    "crates/wordlist",
+    "crates/reader",
     "crates/sender",
+    "crates/logger",
 ]
 
 [dependencies]

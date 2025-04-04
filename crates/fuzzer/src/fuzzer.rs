@@ -1,13 +1,13 @@
-use crate::args::FuzzerArgs;
-use crate::logger::Logger;
+use crate::FuzzerArgs;
 
-use wordlist::{Wordlist, WordlistArgs};
+use reader::{Reader, ReaderArgs};
 use sender::{Sender, SenderArgs};
+use logger::{Logger, LoggerArgs};
 use std::sync::{Arc, Mutex};
 use crossbeam::thread;
 
 pub struct Fuzzer {
-    pub wordlist: Wordlist,
+    pub reader: Reader,
     pub sender: Sender,
     pub logger: Logger,
 }
@@ -15,19 +15,19 @@ pub struct Fuzzer {
 impl Fuzzer {
     pub fn new(args: &FuzzerArgs) -> Self {
         
-        let wordlist = Wordlist::new(WordlistArgs::from(args))
+        let reader = Reader::new(ReaderArgs::from(args))
             .unwrap_or_else(|e| panic!("Fatal error: {}", e.as_str()));
         
         let sender = Sender::new(SenderArgs::from(args))
             .unwrap_or_else(|e| panic!("Fatal error: {}", e.as_str()));
 
-        let logger = Logger::new(args);
+        let logger = Logger::new(LoggerArgs::from(args));
         
-        Self { wordlist, sender, logger }
+        Self { reader, sender, logger }
     }
 
     pub fn fuzz(&mut self) {
-        let wordlist = Arc::new(Mutex::new(&mut self.wordlist));
+        let reader = Arc::new(Mutex::new(&mut self.reader));
         let sender = Arc::new(&self.sender);
         let logger = Arc::new(&self.logger);
         let url_template = Arc::new(self.sender.args.url.clone());
@@ -36,13 +36,13 @@ impl Fuzzer {
 
         thread::scope(|s| {
             for _ in 0..num_threads {
-                let wordlist = Arc::clone(&wordlist);
+                let reader = Arc::clone(&reader);
                 let sender = Arc::clone(&sender);
                 let logger = Arc::clone(&logger);
                 let url_template = Arc::clone(&url_template);
 
                 s.spawn(move |_| {
-                    while let Ok(mut wl) = wordlist.lock() {
+                    while let Ok(mut wl) = reader.lock() {
                         if wl.load_next_chunk().is_err() {
                             break;
                         }

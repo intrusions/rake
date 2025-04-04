@@ -1,5 +1,5 @@
 use args::ArgsSchema;
-use fuzzer::{fuzzer::Fuzzer, args::FuzzerArgs};
+use fuzzer::{fuzzer::Fuzzer, FuzzerArgs};
 use clap::Parser;
 
 mod args;

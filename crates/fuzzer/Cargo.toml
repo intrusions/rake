@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-wordlist = { path = "../wordlist" }
+reader = { path = "../reader" }
 sender = { path = "../sender" }
+logger = { path = "../logger" }
 
 reqwest = { version = "0.12.15", features = ["blocking"] }
-colored = "3.0.0"
 crossbeam = "0.8.4"

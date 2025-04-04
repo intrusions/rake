@@ -1,4 +1,4 @@
-use crate::args::SenderArgs;
+use crate::SenderArgs;
 use std::time::Duration;
 use reqwest::{
     blocking::{

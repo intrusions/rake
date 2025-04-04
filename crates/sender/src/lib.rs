@@ -1,5 +1,8 @@
 pub mod sender;
-pub mod args;
-
 pub use sender::Sender;
-pub use args::SenderArgs;
+
+pub struct SenderArgs {
+    pub user_agent: String,
+    pub request_timeout: u64,
+    pub url: String
+}
