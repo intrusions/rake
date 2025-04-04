@@ -16,12 +16,12 @@ pub struct ArgsSchema {
     #[arg(required = true)]
     pub wordlist: String,
 
-    /// Timing level for request speed.
-    /// Ranges from 1 (slow) to 5 (very fast).
-    #[arg(short = 't', long = "timing")]
-    #[arg(default_value_t = 3, hide_default_value = true, hide_possible_values = true)]
-    #[arg(value_parser = clap::value_parser!(u8).range(1..=5))]
-    pub timing: u8,
+    /// Number of threads
+    /// Default is 40.
+    #[arg(short = 't', long = "threads")]
+    #[arg(default_value_t = 40, hide_default_value = true, hide_possible_values = true)]
+    #[arg(value_parser = clap::value_parser!(u8).range(1..=120))]
+    pub threads: u8,
 
     /// Request timeout in milliseconds.
     /// Default is 5000 ms (5 seconds).
@@ -55,7 +55,7 @@ impl From<ArgsSchema> for FuzzerArgs {
         FuzzerArgs {
             url: args.url,
             wordlist: args.wordlist,
-            timing: args.timing,
+            threads: args.threads,
             timeout: args.timeout,
             user_agent: args.user_agent,
             exclude_codes: args.exclude_codes,

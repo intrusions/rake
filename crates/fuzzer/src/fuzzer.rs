@@ -10,6 +10,7 @@ pub struct Fuzzer {
     pub reader: Reader,
     pub sender: Sender,
     pub logger: Logger,
+    args: FuzzerArgs
 }
 
 impl Fuzzer {
@@ -23,7 +24,12 @@ impl Fuzzer {
 
         let logger = Logger::new(LoggerArgs::from(args));
         
-        Self { reader, sender, logger }
+        Self {
+            reader,
+            sender,
+            logger,
+            args: args.clone()
+        }
     }
 
     pub fn fuzz(&mut self) {
@@ -32,7 +38,7 @@ impl Fuzzer {
         let logger = Arc::new(&self.logger);
         let url_template = Arc::new(self.sender.args.url.clone());
 
-        let num_threads = 60;
+        let num_threads = self.args.threads;
 
         thread::scope(|s| {
             for _ in 0..num_threads {
@@ -43,17 +49,18 @@ impl Fuzzer {
 
                 s.spawn(move |_| {
                     while let Ok(mut wl) = reader.lock() {
-                        if wl.load_next_chunk().is_err() {
+                        if let Ok(false) = wl.load_next_chunk() {
                             break;
                         }
+
                         let chunk = wl.chunk.clone();
                         drop(wl);
                         
-                        for payload in chunk.iter() {
-                            let url = url_template.replace("{}", payload);
+                        for word in chunk.iter() {
+                            let url = url_template.replace("{}", word);
                             
                             match sender.send(&url) {
-                                Ok(response) => logger.log_response(response, &url),
+                                Ok((response, time)) => logger.log_response(response, time, &url),
                                 Err(e) => eprintln!("Error: {}", e),
                             }
                         }

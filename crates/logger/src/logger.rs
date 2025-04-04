@@ -5,21 +5,26 @@ use crate::filter::{
     ContentSizeFilter
 };
 
+use std::time::Duration;
 use reqwest::blocking::Response;
 use colored::*;
 
 pub struct Logger {
     filters: Vec<Box<dyn ResponseFilter + Send + Sync>>,
+    args: LoggerArgs
 }
 
 impl Logger {
     pub fn new(args: LoggerArgs) -> Self {
         Self::headers(&args);
 
-        let mut logger = Self { filters: Vec::new() };
+        let mut logger = Self {
+            filters: Vec::new(),
+            args
+        };
 
-        logger.filters.push(Box::new(StatusCodeFilter::new(args.exclude_codes.clone())));
-        logger.filters.push(Box::new(ContentSizeFilter::new(args.exclude_size.clone())));
+        logger.filters.push(Box::new(StatusCodeFilter::new(logger.args.exclude_codes.clone())));
+        logger.filters.push(Box::new(ContentSizeFilter::new(logger.args.exclude_size.clone())));
 
         logger
     }
@@ -39,7 +44,7 @@ impl Logger {
 
         println!("*=================================================*");
         println!();
-        println!("{:<6} {:<8} URL", "STATUS", "SIZE");
+        println!("{:<6} {:<6} {:<8} URL", "STATUS", "TIME", "SIZE");
     }
 
     fn status_formatter(status: u16) -> ColoredString {
@@ -59,7 +64,13 @@ impl Logger {
         }
     }
 
-    pub fn log_response(&self, response: Response, url: &str) {
+    fn time_formatter(time: Duration) -> ColoredString {
+        let mut time = time.as_millis().to_string();
+        time.push_str("ms");
+        time.dimmed()
+    }
+
+    pub fn log_response(&self, response: Response, time: Duration, url: &str) {
         if self.filters.iter().any(|filter| filter.should_filter(&response)) {
             return;
         }
@@ -67,9 +78,15 @@ impl Logger {
         let status_code = response.status().as_u16();
         let content_size = response.content_length().unwrap_or(0);
 
-        let colored_status = Self::status_formatter(status_code);
-        let colored_size = Self::size_formatter(content_size);
+        let formated_status = Self::status_formatter(status_code);
+        let formated_size = Self::size_formatter(content_size);
+        let formated_time = Self::time_formatter(time);
 
-        println!("{:<6} {:<8} {}", colored_status, colored_size, url);
+        println!("{:<6} {:<6} {:<8} {}",
+            formated_status,
+            formated_time,
+            formated_size,
+            url.trim()
+        );
     }
 }

@@ -1,7 +1,7 @@
 mod logger;
 mod filter;
-
 pub use logger::Logger;
+
 pub struct LoggerArgs {
     pub url: String,
     pub wordlist: String,

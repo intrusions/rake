@@ -3,10 +3,11 @@ use sender::SenderArgs;
 use reader::ReaderArgs;
 use logger::LoggerArgs;
 
+#[derive(Clone)]
 pub struct FuzzerArgs {
     pub url: String,
     pub wordlist: String,
-    pub timing: u8,
+    pub threads: u8,
     pub timeout: u64,
     pub user_agent: String,
     pub exclude_codes: Vec<u16>,
@@ -26,7 +27,8 @@ impl From<&FuzzerArgs> for SenderArgs {
 impl From<&FuzzerArgs> for ReaderArgs {
     fn from(args: &FuzzerArgs) -> ReaderArgs {
         ReaderArgs {
-            path: args.wordlist.clone()
+            path: args.wordlist.clone(),
+            threads: args.threads
         }
     }
 }
@@ -36,7 +38,7 @@ impl From<&FuzzerArgs> for LoggerArgs {
         LoggerArgs {
             url: args.url.clone(),
             wordlist: args.wordlist.clone(),
-            timing: args.timing,
+            timing: args.threads,
             timeout: args.timeout,
             user_agent: args.user_agent.clone(),
             exclude_codes: args.exclude_codes.clone(),

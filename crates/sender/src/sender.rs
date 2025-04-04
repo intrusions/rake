@@ -1,10 +1,7 @@
 use crate::SenderArgs;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 use reqwest::{
-    blocking::{
-        Client, 
-        Response,
-    }, 
+    blocking::{Client, Response}, 
     Error
 };
 
@@ -21,8 +18,8 @@ pub enum SenderError {
 impl SenderError {
     pub fn as_str(&self) -> &'static str {
         match self {
-            SenderError::Builder => "builder err",
-            SenderError::Unreachable => "addr err",
+            SenderError::Builder => "The HTTP Client cannot be creat",
+            SenderError::Unreachable => "The target address is not reachable",
         }
     }
 }
@@ -57,7 +54,11 @@ impl Sender {
         self.client.get(&self.args.url).send().is_ok()
     }
 
-    pub fn send(&self, url: &String) -> Result<Response, Error> {
-        self.client.get(url).send()
+    pub fn send(&self, url: &String) -> Result<(Response, Duration), Error> {
+        let now = SystemTime::now();
+        let response = self.client.get(url).send()?;
+        let elapsed = now.elapsed().unwrap();
+        
+        Ok((response, elapsed))
     }
 }

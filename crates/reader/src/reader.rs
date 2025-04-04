@@ -1,12 +1,9 @@
 use crate::ReaderArgs;
 use std::{
     fs::File,
-    io::{self, ErrorKind, BufRead, BufReader, Read}
+    io::{self, ErrorKind, BufRead, BufReader}
 };
 
-const DEFAULT_CHUNK_SIZE: usize = 500;
-
-#[derive(Debug)]
 pub enum ReaderError {
     FileNotFound,
     Io(io::Error)
@@ -42,30 +39,49 @@ pub struct Reader {
 impl Reader {
     pub fn new(args: ReaderArgs) -> Result<Self, ReaderError> {
         let file = File::open(&args.path)?;
-        Ok(Self {
-            reader: BufReader::with_capacity(DEFAULT_CHUNK_SIZE * 100, file),
+        let line_count = Self::count_lines(&args.path)?;
+        let chunk_size = std::cmp::max(1, line_count / args.threads as usize);
+    
+        let reader = Self {
+            reader: BufReader::with_capacity(chunk_size * 50, file),
             chunk: Vec::new(),
-            chunk_size: DEFAULT_CHUNK_SIZE,
+            chunk_size,
             args,
-        })
+        };
+    
+        Ok(reader)
     }
 
-    pub fn load_next_chunk(&mut self) -> Result<(), ReaderError> {
-        self.chunk.clear();
-
-        let lines = self.reader.by_ref().lines();
-        for line in lines.take(self.chunk_size) {
-            self.chunk.push(line?);
+    pub fn load_next_chunk(&mut self) -> Result<bool, ReaderError> {
+        let mut line = String::new();
+        let mut chunk = Vec::new();
+    
+        for _ in 0..self.chunk_size {
+            line.clear();
+            
+            let bytes = self.reader.read_line(&mut line)?;
+            if bytes == 0 {
+                break;
+            }
+            
+            chunk.push(line.to_string());
         }
-
-        Ok(())
+    
+        self.chunk = chunk;
+        Ok(!self.chunk.is_empty())
+    }
+    
+    fn count_lines<P: AsRef<std::path::Path>>(path: P) -> Result<usize, ReaderError> {
+        let file = File::open(path).unwrap();
+        let reader = BufReader::new(file);
+        Ok(reader.lines().count())
     }
 
     pub fn is_finished(&self) -> bool {
         self.chunk.is_empty()
     }
 
-    pub fn get(&self, index: usize) -> Option<&str> {
+    pub fn get_by_index(&self, index: usize) -> Option<&str> {
         self.chunk.get(index).map(String::as_str)
     }
 
