@@ -5,22 +5,32 @@ use crate::filter::{
     ContentSizeFilter
 };
 
+use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
 use reqwest::blocking::Response;
 use colored::*;
 
 pub struct Logger {
     filters: Vec<Box<dyn ResponseFilter + Send + Sync>>,
-    args: LoggerArgs
+    args: LoggerArgs,
+    progress_bar: ProgressBar
 }
 
 impl Logger {
-    pub fn new(args: LoggerArgs) -> Self {
+    pub fn new(args: LoggerArgs, line_count: usize) -> Self {
         Self::headers(&args);
+
+        let progress_bar = ProgressBar::new(line_count as u64);
+        progress_bar.set_style(
+            ProgressStyle::default_bar()
+                .template(":: Progress: [{pos}/{len}][{percent}%] :: Duration: {elapsed_precise} :: {per_sec}")
+                .unwrap()
+        );
 
         let mut logger = Self {
             filters: Vec::new(),
-            args
+            args,
+            progress_bar
         };
 
         logger.filters.push(Box::new(StatusCodeFilter::new(logger.args.exclude_codes.clone())));
@@ -35,7 +45,7 @@ impl Logger {
 
         println!("* {:<14} : {}", "URL".dimmed(), args.url);
         println!("* {:<14} : {}", "Wordlist".dimmed(), args.wordlist);
-        println!("* {:<14} : {}", "Timing Level".dimmed(), args.timing);
+        println!("* {:<14} : {}", "Threads".dimmed(), args.threads);
         println!("* {:<14} : {}", "Timeout".dimmed(), args.timeout);
         println!("* {:<14} : {}", "User-Agent".dimmed(), args.user_agent);
         println!("* {:<14} : {:?}", "Excluded code".dimmed(), args.exclude_codes);
@@ -71,6 +81,8 @@ impl Logger {
     }
 
     pub fn log_response(&self, response: Response, time: Duration, url: &str) {
+        self.bar_inc_progress();
+
         if self.filters.iter().any(|filter| filter.should_filter(&response)) {
             return;
         }
@@ -82,11 +94,15 @@ impl Logger {
         let formated_size = Self::size_formatter(content_size);
         let formated_time = Self::time_formatter(time);
 
-        println!("{:<6} {:<6} {:<8} {}",
+        self.progress_bar.println(format!("{:<6} {:<6} {:<8} {}",
             formated_status,
             formated_time,
             formated_size,
             url.trim()
-        );
+        ));
+    }
+
+    pub fn bar_inc_progress(&self) {
+        self.progress_bar.inc(1);
     }
 }

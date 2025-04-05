@@ -5,7 +5,7 @@ pub use logger::Logger;
 pub struct LoggerArgs {
     pub url: String,
     pub wordlist: String,
-    pub timing: u8,
+    pub threads: u8,
     pub timeout: u64,
     pub user_agent: String,
     pub exclude_codes: Vec<u16>,

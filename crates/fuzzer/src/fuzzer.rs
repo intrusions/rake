@@ -22,7 +22,7 @@ impl Fuzzer {
         let sender = Sender::new(SenderArgs::from(args))
             .unwrap_or_else(|e| panic!("Fatal error: {}", e.as_str()));
 
-        let logger = Logger::new(LoggerArgs::from(args));
+        let logger = Logger::new(LoggerArgs::from(args), reader.line_count);
         
         Self {
             reader,
@@ -61,10 +61,16 @@ impl Fuzzer {
                         
                         for word in chunk.iter() {
                             let url = url_template.replace("{}", word);
-                            
-                            match sender.send(&url) {
-                                Ok((response, time)) => logger.log_response(response, time, &url),
-                                Err(e) => eprintln!("Error: {}", e),
+                            for _ in 0..3 {
+                                match sender.send(&url) {
+                                    Ok((response, time)) => {
+                                        logger.log_response(response, time, &url);
+                                        break;
+                                    }
+                                    Err(_) => {
+                                        std::thread::sleep(std::time::Duration::from_millis(100))
+                                    },
+                                }
                             }
                         }
                     }

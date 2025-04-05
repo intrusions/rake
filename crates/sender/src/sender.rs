@@ -36,7 +36,8 @@ impl Sender {
         let client = reqwest::blocking::Client::builder()
             .timeout(Duration::from_millis(args.request_timeout))
             .user_agent(&args.user_agent)
-            .build().map_err(|_| {
+            .build()
+            .map_err(|_| {
                 SenderError::Builder
         })?;
         

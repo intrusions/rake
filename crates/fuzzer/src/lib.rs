@@ -38,7 +38,7 @@ impl From<&FuzzerArgs> for LoggerArgs {
         LoggerArgs {
             url: args.url.clone(),
             wordlist: args.wordlist.clone(),
-            timing: args.threads,
+            threads: args.threads,
             timeout: args.timeout,
             user_agent: args.user_agent.clone(),
             exclude_codes: args.exclude_codes.clone(),
