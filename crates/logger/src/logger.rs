@@ -17,10 +17,10 @@ pub struct Logger {
 }
 
 impl Logger {
-    pub fn new(args: LoggerArgs, line_count: usize) -> Self {
+    pub fn new(args: LoggerArgs, wl_lines_count: usize) -> Self {
         Self::headers(&args);
 
-        let progress_bar = ProgressBar::new(line_count as u64);
+        let progress_bar = ProgressBar::new(wl_lines_count as u64);
         progress_bar.set_style(
             ProgressStyle::default_bar()
                 .template(":: Progress: [{pos}/{len}][{percent}%] :: Duration: {elapsed_precise} :: {per_sec}")
@@ -33,8 +33,11 @@ impl Logger {
             progress_bar
         };
 
-        logger.filters.push(Box::new(StatusCodeFilter::new(logger.args.exclude_codes.clone())));
-        logger.filters.push(Box::new(ContentSizeFilter::new(logger.args.exclude_size.clone())));
+        logger.filters.push(Box::new(StatusCodeFilter::new(logger.args.filtered_code.clone(), 
+        logger.args.matched_code.clone())));
+        
+        logger.filters.push(Box::new(ContentSizeFilter::new(logger.args.filtered_size.clone(), 
+        logger.args.matched_size.clone())));
 
         logger
     }
@@ -48,8 +51,8 @@ impl Logger {
         println!("* {:<14} : {}", "Threads".dimmed(), args.threads);
         println!("* {:<14} : {}", "Timeout".dimmed(), args.timeout);
         println!("* {:<14} : {}", "User-Agent".dimmed(), args.user_agent);
-        println!("* {:<14} : {:?}", "Excluded code".dimmed(), args.exclude_codes);
-        println!("* {:<14} : {:?}", "Excluded size".dimmed(), args.exclude_size);
+        println!("* {:<14} : {:?}", "Filtered code".dimmed(), args.filtered_code);
+        println!("* {:<14} : {:?}", "Filtered size".dimmed(), args.filtered_size);
         println!();
 
         println!("*=================================================*");

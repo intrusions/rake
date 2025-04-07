@@ -8,6 +8,8 @@ pub struct LoggerArgs {
     pub threads: u8,
     pub timeout: u64,
     pub user_agent: String,
-    pub exclude_codes: Vec<u16>,
-    pub exclude_size: Vec<u64>,
+    pub filtered_code: Vec<u16>,
+    pub filtered_size: Vec<u64>,
+    pub matched_code: Vec<u16>,
+    pub matched_size: Vec<u64>
 }

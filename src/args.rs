@@ -25,7 +25,7 @@ pub struct ArgsSchema {
 
     /// Request timeout in milliseconds.
     /// Default is 5000 ms (5 seconds).
-    #[arg(short = 'm', long = "timeout")]
+    #[arg(short = 'T', long = "timeout")]
     #[arg(default_value_t = 5000, hide_default_value = true)]
     pub timeout: u64,
 
@@ -37,17 +37,31 @@ pub struct ArgsSchema {
 
     /// List of HTTP status codes to ignore.
     /// 
-    /// Example: `404,403` will exclude responses with status 404 or 403.
-    #[arg(short = 'c', long = "exclude-code")]
+    /// Example: `404,403` will filter responses with status 404 or 403.
+    #[arg(short = 'c', long = "filter-code")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    pub exclude_codes: Vec<u16>,
+    pub filtered_code: Vec<u16>,
 
     /// List of content size to ignore.
     /// 
-    /// Example: `1000,1001` will exclude responses with content size of 1000 or 1001.
-    #[arg(short = 's', long = "exclude-size")]
+    /// Example: `1000,1001` will filter responses with content size of 1000 or 1001.
+    #[arg(short = 's', long = "filter-size")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    pub exclude_size: Vec<u64>, 
+    pub filtered_size: Vec<u64>,
+
+    /// List of HTTP status codes to match.
+    /// 
+    /// Example: `200` will match responses with status 200.
+    #[arg(short = 'C', long = "match-code")]
+    #[arg(num_args = 1.., value_delimiter = ',')]
+    pub matched_code: Vec<u16>,
+
+    /// List of content size to match.
+    /// 
+    /// Example: `270` will filter responses with content size of 270.
+    #[arg(short = 'S', long = "match-size")]
+    #[arg(num_args = 1.., value_delimiter = ',')]
+    pub matched_size: Vec<u64>, 
 }
 
 impl From<ArgsSchema> for FuzzerArgs {
@@ -58,8 +72,10 @@ impl From<ArgsSchema> for FuzzerArgs {
             threads: args.threads,
             timeout: args.timeout,
             user_agent: args.user_agent,
-            exclude_codes: args.exclude_codes,
-            exclude_size: args.exclude_size
+            filtered_code: args.filtered_code,
+            filtered_size: args.filtered_size,
+            matched_code: args.matched_code,
+            matched_size: args.matched_size,
         }
     }
 }

@@ -10,8 +10,10 @@ pub struct FuzzerArgs {
     pub threads: u8,
     pub timeout: u64,
     pub user_agent: String,
-    pub exclude_codes: Vec<u16>,
-    pub exclude_size: Vec<u64>,
+    pub filtered_code: Vec<u16>,
+    pub filtered_size: Vec<u64>,
+    pub matched_code: Vec<u16>,
+    pub matched_size: Vec<u64>
 }
 
 impl From<&FuzzerArgs> for SenderArgs {
@@ -41,8 +43,10 @@ impl From<&FuzzerArgs> for LoggerArgs {
             threads: args.threads,
             timeout: args.timeout,
             user_agent: args.user_agent.clone(),
-            exclude_codes: args.exclude_codes.clone(),
-            exclude_size: args.exclude_size.clone()
+            filtered_code: args.filtered_code.clone(),
+            filtered_size: args.filtered_size.clone(),
+            matched_code: args.matched_code.clone(),
+            matched_size: args.matched_size.clone(),
         }
     }
 }
