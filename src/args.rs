@@ -16,8 +16,8 @@ pub struct ArgsSchema {
     #[arg(required = true)]
     pub wordlist: String,
 
-    /// Number of threads
-    /// Default is 40.
+    /// Number of threads.
+    /// Default is 40
     #[arg(short = 't', long = "threads")]
     #[arg(default_value_t = 40, hide_default_value = true, hide_possible_values = true)]
     #[arg(value_parser = clap::value_parser!(u8).range(1..=120))]
@@ -42,6 +42,13 @@ pub struct ArgsSchema {
     #[arg(num_args = 1.., value_delimiter = ',')]
     pub filtered_code: Vec<u16>,
 
+    /// List of HTTP status codes to match.
+    /// 
+    /// Example: `200` will match responses with status 200.
+    #[arg(short = 'C', long = "match-code")]
+    #[arg(num_args = 1.., value_delimiter = ',')]
+    pub matched_code: Vec<u16>,
+    
     /// List of content size to ignore.
     /// 
     /// Example: `1000,1001` will filter responses with content size of 1000 or 1001.
@@ -49,19 +56,19 @@ pub struct ArgsSchema {
     #[arg(num_args = 1.., value_delimiter = ',')]
     pub filtered_size: Vec<u64>,
 
-    /// List of HTTP status codes to match.
-    /// 
-    /// Example: `200` will match responses with status 200.
-    #[arg(short = 'C', long = "match-code")]
-    #[arg(num_args = 1.., value_delimiter = ',')]
-    pub matched_code: Vec<u16>,
 
     /// List of content size to match.
     /// 
     /// Example: `270` will filter responses with content size of 270.
     #[arg(short = 'S', long = "match-size")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    pub matched_size: Vec<u64>, 
+    pub matched_size: Vec<u64>,
+
+    /// Follow redirects.
+    /// Default is false
+    #[arg(short = 'r', long = "follow-redirect")]
+    #[arg(default_value_t = false)]
+    pub follow_redirect: bool, 
 }
 
 impl From<ArgsSchema> for FuzzerArgs {
@@ -76,6 +83,7 @@ impl From<ArgsSchema> for FuzzerArgs {
             filtered_size: args.filtered_size,
             matched_code: args.matched_code,
             matched_size: args.matched_size,
+            follow_redirect: args.follow_redirect
         }
     }
 }

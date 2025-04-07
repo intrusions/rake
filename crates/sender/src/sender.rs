@@ -1,7 +1,8 @@
 use crate::SenderArgs;
 use std::time::{Duration, SystemTime};
 use reqwest::{
-    blocking::{Client, Response}, 
+    blocking::{Client, Response},
+    redirect::Policy,
     Error
 };
 
@@ -30,12 +31,19 @@ impl Sender {
         let args = SenderArgs {
             user_agent: args.user_agent,
             request_timeout: args.request_timeout,
-            url: args.url
+            url: args.url,
+            follow_redirect: args.follow_redirect
         };
         
+        let policy = match args.follow_redirect {
+            false => Policy::none(),
+            true => Policy::default()
+        };
+
         let client = reqwest::blocking::Client::builder()
             .timeout(Duration::from_millis(args.request_timeout))
             .user_agent(&args.user_agent)
+            .redirect(policy)
             .build()
             .map_err(|_| {
                 SenderError::Builder

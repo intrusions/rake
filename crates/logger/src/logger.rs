@@ -86,13 +86,14 @@ impl Logger {
     pub fn log_response(&self, response: Response, time: Duration, url: &str) {
         self.bar_inc_progress();
 
-        if self.filters.iter().any(|filter| filter.should_filter(&response)) {
-            return;
-        }
-
         let status_code = response.status().as_u16();
         let content_size = response.content_length().unwrap_or(0);
 
+        if self.filters.iter().any(|filter| filter.should_filter(&response)) {
+            return;
+        }
+        
+        
         let formated_status = Self::status_formatter(status_code);
         let formated_size = Self::size_formatter(content_size);
         let formated_time = Self::time_formatter(time);

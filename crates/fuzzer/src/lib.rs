@@ -13,7 +13,8 @@ pub struct FuzzerArgs {
     pub filtered_code: Vec<u16>,
     pub filtered_size: Vec<u64>,
     pub matched_code: Vec<u16>,
-    pub matched_size: Vec<u64>
+    pub matched_size: Vec<u64>,
+    pub follow_redirect: bool
 }
 
 impl From<&FuzzerArgs> for SenderArgs {
@@ -21,7 +22,8 @@ impl From<&FuzzerArgs> for SenderArgs {
         SenderArgs {
             user_agent: args.user_agent.clone(),
             request_timeout: args.timeout,
-            url: args.url.clone()
+            url: args.url.clone(),
+            follow_redirect: args.follow_redirect
         }
     }
 }
