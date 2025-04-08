@@ -30,7 +30,7 @@ pub struct ArgsSchema {
     pub timeout: u64,
 
     /// Custom User-Agent string.
-    /// Default: `rake/1.0`
+    /// Default is `rake/1.0`
     #[arg(short = 'a', long = "user-agent")]
     #[arg(default_value = "rake/1.0", hide_default_value = true)]
     pub user_agent: String,
@@ -71,9 +71,9 @@ pub struct ArgsSchema {
     pub follow_redirect: bool, 
 
     /// HTTP method to use.
-    /// Default is `get`
+    /// Default is GET
     #[arg(short = 'X', long = "method")]
-    #[arg(default_value = "GET")]
+    #[arg(default_value = "GET", hide_default_value = true)]
     pub method: String, 
 }
 
