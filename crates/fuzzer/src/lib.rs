@@ -14,7 +14,8 @@ pub struct FuzzerArgs {
     pub filtered_size: Vec<u64>,
     pub matched_code: Vec<u16>,
     pub matched_size: Vec<u64>,
-    pub follow_redirect: bool
+    pub follow_redirect: bool,
+    pub method: String
 }
 
 impl From<&FuzzerArgs> for SenderArgs {
@@ -23,7 +24,8 @@ impl From<&FuzzerArgs> for SenderArgs {
             user_agent: args.user_agent.clone(),
             request_timeout: args.timeout,
             url: args.url.clone(),
-            follow_redirect: args.follow_redirect
+            follow_redirect: args.follow_redirect,
+            method: args.method.clone()
         }
     }
 }
@@ -49,6 +51,7 @@ impl From<&FuzzerArgs> for LoggerArgs {
             filtered_size: args.filtered_size.clone(),
             matched_code: args.matched_code.clone(),
             matched_size: args.matched_size.clone(),
+            method: args.method.clone()
         }
     }
 }

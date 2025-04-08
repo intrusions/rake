@@ -53,6 +53,7 @@ impl Logger {
         println!("* {:<14} : {}", "User-Agent".dimmed(), args.user_agent);
         println!("* {:<14} : {:?}", "Filtered code".dimmed(), args.filtered_code);
         println!("* {:<14} : {:?}", "Filtered size".dimmed(), args.filtered_size);
+        println!("* {:<14} : {}", "Method".dimmed(), args.method);
         println!();
 
         println!("*=================================================*");
@@ -92,7 +93,6 @@ impl Logger {
         if self.filters.iter().any(|filter| filter.should_filter(&response)) {
             return;
         }
-        
         
         let formated_status = Self::status_formatter(status_code);
         let formated_size = Self::size_formatter(content_size);

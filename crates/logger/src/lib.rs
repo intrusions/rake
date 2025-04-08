@@ -11,5 +11,6 @@ pub struct LoggerArgs {
     pub filtered_code: Vec<u16>,
     pub filtered_size: Vec<u64>,
     pub matched_code: Vec<u16>,
-    pub matched_size: Vec<u64>
+    pub matched_size: Vec<u64>,
+    pub method: String
 }

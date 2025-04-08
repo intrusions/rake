@@ -69,6 +69,12 @@ pub struct ArgsSchema {
     #[arg(short = 'r', long = "follow-redirect")]
     #[arg(default_value_t = false)]
     pub follow_redirect: bool, 
+
+    /// HTTP method to use.
+    /// Default is `get`
+    #[arg(short = 'X', long = "method")]
+    #[arg(default_value = "GET")]
+    pub method: String, 
 }
 
 impl From<ArgsSchema> for FuzzerArgs {
@@ -83,7 +89,8 @@ impl From<ArgsSchema> for FuzzerArgs {
             filtered_size: args.filtered_size,
             matched_code: args.matched_code,
             matched_size: args.matched_size,
-            follow_redirect: args.follow_redirect
+            follow_redirect: args.follow_redirect,
+            method: args.method
         }
     }
 }
