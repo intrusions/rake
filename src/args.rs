@@ -1,5 +1,16 @@
 use clap::Parser;
 use fuzzer::FuzzerArgs;
+use std::{
+    fmt::{Debug, Display},
+    convert::TryFrom,
+    str::FromStr
+};
+
+#[derive(Clone)]
+pub enum RangeOrValue<T> {
+    Single(T),
+    Range(T, T),
+}
 
 #[derive(Parser)]
 pub struct ArgsSchema {
@@ -37,32 +48,35 @@ pub struct ArgsSchema {
 
     /// List of HTTP status codes to ignore.
     /// 
-    /// Example: `404,403` will filter responses with status 404 or 403.
+    /// Example: `200-300, 401` will filter responses with status beetwen 200 and 300, and 401.
     #[arg(short = 'c', long = "filter-code")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    pub filtered_code: Vec<u16>,
+    #[arg(value_parser(parse_range_or_value::<u16>))]
+    pub filtered_code: Vec<RangeOrValue<u16>>,
 
     /// List of HTTP status codes to match.
     /// 
-    /// Example: `200` will match responses with status 200.
+    /// Example: `200-300, 401` will match responses with status beetwen 200 and 300, and 401.
     #[arg(short = 'C', long = "match-code")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    pub matched_code: Vec<u16>,
+    #[arg(value_parser(parse_range_or_value::<u16>))]
+    pub matched_code: Vec<RangeOrValue<u16>>,
     
     /// List of content size to ignore.
     /// 
-    /// Example: `1000,1001` will filter responses with content size of 1000 or 1001.
+    /// Example: `1000-2000, 2777` will filter responses with content size beetwen 1000 and 2000, and 2777.
     #[arg(short = 's', long = "filter-size")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    pub filtered_size: Vec<u64>,
-
+    #[arg(value_parser(parse_range_or_value::<u64>))]
+    pub filtered_size: Vec<RangeOrValue<u64>>,
 
     /// List of content size to match.
     /// 
-    /// Example: `270` will filter responses with content size of 270.
+    /// Example: `1000-2000, 2777` will match responses with content size beetwen 1000 and 2000, and 2777.
     #[arg(short = 'S', long = "match-size")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    pub matched_size: Vec<u64>,
+    #[arg(value_parser(parse_range_or_value::<u64>))]
+    pub matched_size: Vec<RangeOrValue<u64>>,
 
     /// Follow redirects.
     /// Default is false
@@ -74,7 +88,7 @@ pub struct ArgsSchema {
     /// Default is GET
     #[arg(short = 'X', long = "method")]
     #[arg(default_value = "GET", hide_default_value = true)]
-    pub method: String, 
+    pub method: String,
 }
 
 impl From<ArgsSchema> for FuzzerArgs {
@@ -85,12 +99,54 @@ impl From<ArgsSchema> for FuzzerArgs {
             threads: args.threads,
             timeout: args.timeout,
             user_agent: args.user_agent,
-            filtered_code: args.filtered_code,
-            filtered_size: args.filtered_size,
-            matched_code: args.matched_code,
-            matched_size: args.matched_size,
+            filtered_code: expand_ranges(args.filtered_code),
+            filtered_size: expand_ranges(args.filtered_size),
+            matched_code: expand_ranges(args.matched_code),
+            matched_size: expand_ranges(args.matched_size),
             follow_redirect: args.follow_redirect,
-            method: args.method
+            method: args.method,
         }
     }
+}
+
+pub fn parse_range_or_value<T>(s: &str) -> Result<RangeOrValue<T>, String>
+where
+    T: FromStr + PartialOrd + Copy,
+    <T as FromStr>::Err: Display,
+{
+    if let Some((start, end)) = s.split_once('-') {
+        let start: T = start.trim().parse().map_err(|e| format!("Invalid start of range: {}", e))?;
+        let end: T = end.trim().parse().map_err(|e| format!("Invalid end of range: {}", e))?;
+        
+        if start > end {
+            return Err("Start of range cannot be greater than end".into());
+        }
+
+        Ok(RangeOrValue::Range(start, end))
+    } else {
+        let single: T = s.trim().parse().map_err(|e| format!("Invalid number: {}", e))?;
+        
+        Ok(RangeOrValue::Single(single))
+    }
+}
+
+pub fn expand_ranges<T>(input: Vec<RangeOrValue<T>>) -> Vec<T>
+where
+    T:  Into<u64> + TryFrom<u64>,
+    <T as TryFrom<u64>>::Error: Debug,
+{
+    input
+        .into_iter()
+        .flat_map(|r| match r {
+            RangeOrValue::Single(v) => vec![v],
+            RangeOrValue::Range(start, end) => {
+                let start = start.into();
+                let end = end.into();
+                
+                (start..=end)
+                    .map(|v| T::try_from(v).unwrap())
+                    .collect()
+            }
+        })
+        .collect()
 }
