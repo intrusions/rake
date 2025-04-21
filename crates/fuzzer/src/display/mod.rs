@@ -4,11 +4,11 @@ pub mod args;
 use crate::display::filter::{ContentSizeFilter, ResponseFilter, StatusCodeFilter};
 use crate::DisplayArgs;
 
-use colored::*;
+use std::{time::Duration, ops::Add, fmt};
 use filter::WordFilter;
-use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::blocking::Response;
-use std::time::Duration;
+use indicatif::{ProgressBar, ProgressStyle};
+use colored::*;
 
 pub struct Display {
     filters: Vec<Box<dyn ResponseFilter + Send + Sync>>,
@@ -52,27 +52,30 @@ impl Display {
     }
 
     pub fn headers(args: &DisplayArgs) {
-        fn range_formatted(range: &[u16]) -> Vec<String> {
+        pub fn range_formatted<T>(range: &[T]) -> Vec<String>
+        where
+            T: Copy + PartialOrd + Add<Output = T> + fmt::Display + Ord + TryFrom<u64> + Into<u64>,
+        {
             if range.is_empty() {
                 return vec![];
             }
-
+        
             let mut sorted = range.to_owned();
-            sorted.sort_unstable();
-
+            sorted.sort();
+        
             let mut result = Vec::new();
             let mut start = sorted[0];
             let mut prev = sorted[0];
             let mut count = 1;
-
+        
             for &num in sorted.iter().skip(1) {
-                if num == prev + 1 {
+                if num.into() == prev.into() + 1 {
                     count += 1;
                 } else {
                     if count >= 6 {
                         result.push(format!("{}-{}", start, prev));
                     } else {
-                        for n in start..=prev {
+                        for n in start.into()..=prev.into() {
                             result.push(n.to_string());
                         }
                     }
@@ -81,15 +84,15 @@ impl Display {
                 }
                 prev = num;
             }
-
+        
             if count >= 6 {
                 result.push(format!("{}-{}", start, prev));
             } else {
-                for n in start..=prev {
+                for n in start.into()..=prev.into() {
                     result.push(n.to_string());
                 }
             }
-
+        
             result
         }
 
@@ -101,22 +104,26 @@ impl Display {
         println!("* {:<14} : {}", "Threads".dimmed(), args.threads);
         println!("* {:<14} : {}", "Timeout".dimmed(), args.timeout);
         println!("* {:<14} : {}", "User-Agent".dimmed(), args.user_agent);
-        println!(
-            "* {:<14} : {:?}",
-            "Filtered code".dimmed(),
-            range_formatted(&args.filtered_code)
-        );
-        println!(
-            "* {:<14} : {:?}",
-            "Filtered size".dimmed(),
-            args.filtered_size
-        );
+
+        if !args.filtered_code.is_empty() {
+            println!("* {:<14} : {:?}", "Filtered code".dimmed(), range_formatted(&args.filtered_code));
+        }
+        if !args.filtered_size.is_empty() {
+            println!("* {:<14} : {:?}", "Filtered size".dimmed(), range_formatted(&args.filtered_size));
+        }
+        if !args.matched_code.is_empty() {
+            println!("* {:<14} : {:?}", "Matched code".dimmed(), range_formatted(&args.matched_code));
+        }
+        if !args.matched_size.is_empty() {
+            println!("* {:<14} : {:?}", "Matched size".dimmed(), range_formatted(&args.matched_size));
+        }
+
         println!("* {:<14} : {}", "Method".dimmed(), args.method);
         println!();
 
         println!("*=================================================*");
         println!();
-        println!("{:<6} {:<6} {:<8} URL", "STATUS", "TIME", "SIZE");
+        println!("{:<6} {:<6} {:<8} URL", "STATUS", "SIZE", "TIME");
     }
 
     fn status_formatter(status: u16) -> ColoredString {

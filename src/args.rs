@@ -49,9 +49,11 @@ pub struct ArgsSchema {
     /// List of HTTP status codes to ignore.
     ///
     /// Example: `200-300, 401` will filter responses with status beetwen 200 and 300, and 401.
+    /// Default is: 404
     #[arg(short = 'c', long = "filter-code")]
     #[arg(num_args = 1.., value_delimiter = ',')]
     #[arg(value_parser(parse_range_or_value::<u16>))]
+    #[arg(default_value = "404", hide_default_value = true)]
     pub filtered_code: Vec<RangeOrValue<u16>>,
     
     /// List of word contained in body to filter.
