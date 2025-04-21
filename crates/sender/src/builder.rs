@@ -28,8 +28,8 @@ pub struct SenderBuilder {
     method: String,
 }
 
-impl SenderBuilder {
-    pub fn new() -> Self {
+impl Default for SenderBuilder {
+    fn default() -> Self {
         Self {
             user_agent: String::from("rake/1.0"),
             request_timeout: 5000,
@@ -38,7 +38,9 @@ impl SenderBuilder {
             method: String::from("GET"),
         }
     }
+}
 
+impl SenderBuilder {
     pub fn with_user_agent(mut self, user_agent: &str) -> Self {
         self.user_agent = user_agent.to_string();
         self

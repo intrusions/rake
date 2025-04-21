@@ -1,5 +1,6 @@
 use crate::FuzzerArgs;
-use crate::display::{Display, DisplayArgs};
+use crate::display::Display;
+use crate::DisplayArgs;
 
 use reader::{Reader, builder::ReaderBuilder};
 use sender::{Sender, builder::SenderBuilder};
@@ -16,13 +17,13 @@ pub struct Fuzzer {
 
 impl Fuzzer {
     pub fn new(args: &FuzzerArgs) -> Self {
-        let reader = ReaderBuilder::new()
+        let reader = ReaderBuilder::default()
             .with_path(args.wordlist.clone())
             .with_threads(args.threads)
             .build()
             .unwrap_or_else(|e| panic!("{}", e.as_str()));
 
-        let sender = SenderBuilder::new()
+        let sender = SenderBuilder::default()
             .with_url(args.url.clone())
             .with_user_agent(&args.user_agent)
             .with_follow_redirect(args.follow_redirect)

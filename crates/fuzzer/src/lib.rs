@@ -1,7 +1,7 @@
 pub mod display;
 pub mod fuzzer;
 
-use display::DisplayArgs;
+use crate::display::args::DisplayArgs;
 
 #[derive(Clone)]
 pub struct FuzzerArgs {

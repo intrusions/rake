@@ -24,14 +24,16 @@ pub struct ReaderBuilder {
     pub threads: u8,
 }
 
-impl ReaderBuilder {
-    pub fn new() -> Self {
+impl Default for ReaderBuilder {
+    fn default() -> Self {
         Self {
             path: None,
             threads: 40,
         }
     }
+}
 
+impl ReaderBuilder {
     pub fn with_path(mut self, path: String) -> Self {
         self.path = Some(path);
         self
@@ -48,9 +50,9 @@ impl ReaderBuilder {
             Some(path) => path,
         };
 
-        let file = File::open(&path).map_err(|_| ReaderBuilderError::FileNotFound)?;
+        let file = File::open(path).map_err(|_| ReaderBuilderError::FileNotFound)?;
 
-        let line_count = Self::count_lines(&path)?;
+        let line_count = Self::count_lines(path)?;
         let chunk_size = std::cmp::max(1, line_count / self.threads as usize);
 
         let reader = Reader {
