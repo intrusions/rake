@@ -1,7 +1,8 @@
 use crate::FuzzerArgs;
 
-use reader::{Reader, ReaderArgs};
-use sender::{Sender, SenderArgs};
+use reader::{builder::ReaderBuilder, Reader};
+use sender::{builder::SenderBuilder, Sender};
+
 use logger::{Logger, LoggerArgs};
 use std::sync::{Arc, Mutex};
 use crossbeam::thread;
@@ -15,12 +16,18 @@ pub struct Fuzzer {
 
 impl Fuzzer {
     pub fn new(args: &FuzzerArgs) -> Self {
+        let reader = ReaderBuilder::new()
+            .with_path(args.wordlist.clone())
+            .with_threads(args.threads)
+            .build()
+            .unwrap_or_else(|e| panic!("{}", e.as_str()));
         
-        let reader = Reader::new(ReaderArgs::from(args))
-            .unwrap_or_else(|e| panic!("Fatal error: {}", e.as_str()));
-        
-        let sender = Sender::new(SenderArgs::from(args))
-            .unwrap_or_else(|e| panic!("Fatal error: {}", e.as_str()));
+        let sender = SenderBuilder::new()
+            .with_url(args.url.clone())
+            .with_user_agent(&args.user_agent)
+            .with_follow_redirect(args.follow_redirect)
+            .build()
+            .unwrap_or_else(|e| panic!("{}", e.as_str()));
 
         let logger = Logger::new(LoggerArgs::from(args), reader.line_count);
         

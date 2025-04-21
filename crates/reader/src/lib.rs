@@ -1,4 +1,6 @@
-mod reader;
+pub mod reader;
+pub mod builder;
+
 pub use reader::Reader;
 
 pub struct ReaderArgs {

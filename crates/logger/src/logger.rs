@@ -34,15 +34,56 @@ impl Logger {
         };
 
         logger.filters.push(Box::new(StatusCodeFilter::new(logger.args.filtered_code.clone(), 
-        logger.args.matched_code.clone())));
+            logger.args.matched_code.clone())));
         
         logger.filters.push(Box::new(ContentSizeFilter::new(logger.args.filtered_size.clone(), 
-        logger.args.matched_size.clone())));
+            logger.args.matched_size.clone())));
 
         logger
     }
 
     pub fn headers(args: &LoggerArgs) {
+        fn range_formatted(range: &Vec<u16>) -> Vec<String> {
+            if range.is_empty() {
+                return vec![];
+            }
+        
+            let mut sorted = range.clone();
+            sorted.sort_unstable();
+        
+            let mut result = Vec::new();
+            let mut start = sorted[0];
+            let mut prev = sorted[0];
+            let mut count = 1;
+        
+            for &num in sorted.iter().skip(1) {
+                if num == prev + 1 {
+                    count += 1;
+                } else {
+                    if count >= 6 {
+                        result.push(format!("{}-{}", start, prev));
+                    } else {
+                        for n in start..=prev {
+                            result.push(n.to_string());
+                        }
+                    }
+                    start = num;
+                    count = 1;
+                }
+                prev = num;
+            }
+        
+            if count >= 6 {
+                result.push(format!("{}-{}", start, prev));
+            } else {
+                for n in start..=prev {
+                    result.push(n.to_string());
+                }
+            }
+        
+            result
+        }
+
         println!("*=================================================*");
         println!();
 
@@ -51,7 +92,7 @@ impl Logger {
         println!("* {:<14} : {}", "Threads".dimmed(), args.threads);
         println!("* {:<14} : {}", "Timeout".dimmed(), args.timeout);
         println!("* {:<14} : {}", "User-Agent".dimmed(), args.user_agent);
-        println!("* {:<14} : {:?}", "Filtered code".dimmed(), args.filtered_code);
+        println!("* {:<14} : {:?}", "Filtered code".dimmed(), range_formatted(&args.filtered_code));
         println!("* {:<14} : {:?}", "Filtered size".dimmed(), args.filtered_size);
         println!("* {:<14} : {}", "Method".dimmed(), args.method);
         println!();
@@ -94,14 +135,10 @@ impl Logger {
             return;
         }
         
-        let formated_status = Self::status_formatter(status_code);
-        let formated_size = Self::size_formatter(content_size);
-        let formated_time = Self::time_formatter(time);
-
         self.progress_bar.println(format!("{:<6} {:<6} {:<8} {}",
-            formated_status,
-            formated_time,
-            formated_size,
+            Self::status_formatter(status_code),
+            Self::size_formatter(content_size),
+            Self::time_formatter(time),
             url.trim()
         ));
     }

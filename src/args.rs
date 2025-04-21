@@ -91,24 +91,6 @@ pub struct ArgsSchema {
     pub method: String,
 }
 
-impl From<ArgsSchema> for FuzzerArgs {
-    fn from(args: ArgsSchema) -> FuzzerArgs {
-        FuzzerArgs {
-            url: args.url,
-            wordlist: args.wordlist,
-            threads: args.threads,
-            timeout: args.timeout,
-            user_agent: args.user_agent,
-            filtered_code: expand_ranges(args.filtered_code),
-            filtered_size: expand_ranges(args.filtered_size),
-            matched_code: expand_ranges(args.matched_code),
-            matched_size: expand_ranges(args.matched_size),
-            follow_redirect: args.follow_redirect,
-            method: args.method,
-        }
-    }
-}
-
 pub fn parse_range_or_value<T>(s: &str) -> Result<RangeOrValue<T>, String>
 where
     T: FromStr + PartialOrd + Copy,
@@ -132,7 +114,7 @@ where
 
 pub fn expand_ranges<T>(input: Vec<RangeOrValue<T>>) -> Vec<T>
 where
-    T:  Into<u64> + TryFrom<u64>,
+    T: Into<u64> + TryFrom<u64>,
     <T as TryFrom<u64>>::Error: Debug,
 {
     input
@@ -149,4 +131,22 @@ where
             }
         })
         .collect()
+}
+
+impl From<ArgsSchema> for FuzzerArgs {
+    fn from(args: ArgsSchema) -> FuzzerArgs {
+        FuzzerArgs {
+            url: args.url,
+            wordlist: args.wordlist,
+            threads: args.threads,
+            timeout: args.timeout,
+            user_agent: args.user_agent,
+            filtered_code: expand_ranges(args.filtered_code),
+            filtered_size: expand_ranges(args.filtered_size),
+            matched_code: expand_ranges(args.matched_code),
+            matched_size: expand_ranges(args.matched_size),
+            follow_redirect: args.follow_redirect,
+            method: args.method,
+        }
+    }
 }
