@@ -30,11 +30,7 @@ pub struct ArgsSchema {
     /// Number of threads.
     /// Default is 40
     #[arg(short = 't', long = "threads")]
-    #[arg(
-        default_value_t = 40,
-        hide_default_value = true,
-        hide_possible_values = true
-    )]
+    #[arg(default_value_t = 40, hide_default_value = true, hide_possible_values = true)]
     #[arg(value_parser = clap::value_parser!(u8).range(1..=120))]
     pub threads: u8,
 
@@ -57,6 +53,21 @@ pub struct ArgsSchema {
     #[arg(num_args = 1.., value_delimiter = ',')]
     #[arg(value_parser(parse_range_or_value::<u16>))]
     pub filtered_code: Vec<RangeOrValue<u16>>,
+    
+    /// List of word contained in body to filter.
+    ///
+    /// Example: `admin,password` will match responses with body containing `admin` or `password`.
+    #[arg(short = 'o', long = "filter-word")]
+    #[arg(num_args = 1.., value_delimiter = ',')]
+    pub filtered_word: Vec<String>,
+
+    /// List of content size to ignore.
+    ///
+    /// Example: `1000-2000, 2777` will filter responses with content size beetwen 1000 and 2000, and 2777.
+    #[arg(short = 's', long = "filter-size")]
+    #[arg(num_args = 1.., value_delimiter = ',')]
+    #[arg(value_parser(parse_range_or_value::<u64>))]
+    pub filtered_size: Vec<RangeOrValue<u64>>,
 
     /// List of HTTP status codes to match.
     ///
@@ -66,13 +77,12 @@ pub struct ArgsSchema {
     #[arg(value_parser(parse_range_or_value::<u16>))]
     pub matched_code: Vec<RangeOrValue<u16>>,
 
-    /// List of content size to ignore.
+    /// List of word contained in body to match.
     ///
-    /// Example: `1000-2000, 2777` will filter responses with content size beetwen 1000 and 2000, and 2777.
-    #[arg(short = 's', long = "filter-size")]
+    /// Example: `admin,password` will filter responses with body containing `admin` or `password`.
+    #[arg(short = 'O', long = "match-word")]
     #[arg(num_args = 1.., value_delimiter = ',')]
-    #[arg(value_parser(parse_range_or_value::<u64>))]
-    pub filtered_size: Vec<RangeOrValue<u64>>,
+    pub matched_word: Vec<String>,
 
     /// List of content size to match.
     ///
@@ -154,8 +164,10 @@ impl From<ArgsSchema> for FuzzerArgs {
             user_agent: args.user_agent,
             filtered_code: expand_ranges(args.filtered_code),
             filtered_size: expand_ranges(args.filtered_size),
+            filtered_word: args.filtered_word,
             matched_code: expand_ranges(args.matched_code),
             matched_size: expand_ranges(args.matched_size),
+            matched_word: args.matched_word,
             follow_redirect: args.follow_redirect,
             method: args.method,
         }

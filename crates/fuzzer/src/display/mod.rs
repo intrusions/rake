@@ -5,6 +5,7 @@ use crate::display::filter::{ContentSizeFilter, ResponseFilter, StatusCodeFilter
 use crate::DisplayArgs;
 
 use colored::*;
+use filter::WordFilter;
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::blocking::Response;
 use std::time::Duration;
@@ -40,6 +41,11 @@ impl Display {
         display.filters.push(Box::new(ContentSizeFilter::new(
             display.args.filtered_size.clone(),
             display.args.matched_size.clone(),
+        )));
+
+        display.filters.push(Box::new(WordFilter::new(
+            display.args.filtered_word.clone(),
+            display.args.matched_word.clone(),
         )));
 
         display
@@ -141,11 +147,12 @@ impl Display {
 
         let status_code = response.status().as_u16();
         let content_size = response.content_length().unwrap_or(0);
+        let body = response.text().unwrap();
 
         if self
             .filters
             .iter()
-            .any(|filter| filter.should_filter(&response))
+            .any(|filter| filter.should_filter(status_code, content_size, &body))
         {
             return;
         }

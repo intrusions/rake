@@ -1,5 +1,4 @@
 use crate::display::filter::ResponseFilter;
-use reqwest::blocking::Response;
 
 pub struct StatusCodeFilter {
     filtered_code: Vec<u16>,
@@ -16,13 +15,11 @@ impl StatusCodeFilter {
 }
 
 impl ResponseFilter for StatusCodeFilter {
-    fn should_filter(&self, response: &Response) -> bool {
-        let code = &response.status().as_u16();
-
+    fn should_filter(&self, status: u16, _size: u64, _body: &str) -> bool {
         if !self.matched_code.is_empty() {
-            return !self.matched_code.contains(code);
+            return !self.matched_code.contains(&status);
         }
 
-        self.filtered_code.contains(code)
+        self.filtered_code.contains(&status)
     }
 }

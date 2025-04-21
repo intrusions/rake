@@ -1,5 +1,4 @@
 use crate::display::filter::ResponseFilter;
-use reqwest::blocking::Response;
 
 pub struct ContentSizeFilter {
     filtered_size: Vec<u64>,
@@ -16,9 +15,7 @@ impl ContentSizeFilter {
 }
 
 impl ResponseFilter for ContentSizeFilter {
-    fn should_filter(&self, response: &Response) -> bool {
-        let size = response.content_length().unwrap_or(0);
-
+    fn should_filter(&self, _status: u16, size: u64, _body: &str) -> bool {
         if !self.matched_size.is_empty() {
             return !self.matched_size.contains(&size);
         }
