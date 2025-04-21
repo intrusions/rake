@@ -1,23 +1,19 @@
-use crate::LoggerArgs;
-use crate::filter::{
-    ResponseFilter,
-    StatusCodeFilter,
-    ContentSizeFilter
-};
+use crate::DisplayArgs;
+use crate::display::filter::{ContentSizeFilter, ResponseFilter, StatusCodeFilter};
 
-use indicatif::{ProgressBar, ProgressStyle};
-use std::time::Duration;
-use reqwest::blocking::Response;
 use colored::*;
+use indicatif::{ProgressBar, ProgressStyle};
+use reqwest::blocking::Response;
+use std::time::Duration;
 
-pub struct Logger {
+pub struct Display {
     filters: Vec<Box<dyn ResponseFilter + Send + Sync>>,
-    args: LoggerArgs,
-    progress_bar: ProgressBar
+    args: DisplayArgs,
+    progress_bar: ProgressBar,
 }
 
-impl Logger {
-    pub fn new(args: LoggerArgs, wl_lines_count: usize) -> Self {
+impl Display {
+    pub fn new(args: DisplayArgs, wl_lines_count: usize) -> Self {
         Self::headers(&args);
 
         let progress_bar = ProgressBar::new(wl_lines_count as u64);
@@ -27,35 +23,39 @@ impl Logger {
                 .unwrap()
         );
 
-        let mut logger = Self {
+        let mut display = Self {
             filters: Vec::new(),
             args,
-            progress_bar
+            progress_bar,
         };
 
-        logger.filters.push(Box::new(StatusCodeFilter::new(logger.args.filtered_code.clone(), 
-            logger.args.matched_code.clone())));
-        
-        logger.filters.push(Box::new(ContentSizeFilter::new(logger.args.filtered_size.clone(), 
-            logger.args.matched_size.clone())));
+        display.filters.push(Box::new(StatusCodeFilter::new(
+            display.args.filtered_code.clone(),
+            display.args.matched_code.clone(),
+        )));
 
-        logger
+        display.filters.push(Box::new(ContentSizeFilter::new(
+            display.args.filtered_size.clone(),
+            display.args.matched_size.clone(),
+        )));
+
+        display
     }
 
-    pub fn headers(args: &LoggerArgs) {
+    pub fn headers(args: &DisplayArgs) {
         fn range_formatted(range: &Vec<u16>) -> Vec<String> {
             if range.is_empty() {
                 return vec![];
             }
-        
+
             let mut sorted = range.clone();
             sorted.sort_unstable();
-        
+
             let mut result = Vec::new();
             let mut start = sorted[0];
             let mut prev = sorted[0];
             let mut count = 1;
-        
+
             for &num in sorted.iter().skip(1) {
                 if num == prev + 1 {
                     count += 1;
@@ -72,7 +72,7 @@ impl Logger {
                 }
                 prev = num;
             }
-        
+
             if count >= 6 {
                 result.push(format!("{}-{}", start, prev));
             } else {
@@ -80,7 +80,7 @@ impl Logger {
                     result.push(n.to_string());
                 }
             }
-        
+
             result
         }
 
@@ -92,8 +92,16 @@ impl Logger {
         println!("* {:<14} : {}", "Threads".dimmed(), args.threads);
         println!("* {:<14} : {}", "Timeout".dimmed(), args.timeout);
         println!("* {:<14} : {}", "User-Agent".dimmed(), args.user_agent);
-        println!("* {:<14} : {:?}", "Filtered code".dimmed(), range_formatted(&args.filtered_code));
-        println!("* {:<14} : {:?}", "Filtered size".dimmed(), args.filtered_size);
+        println!(
+            "* {:<14} : {:?}",
+            "Filtered code".dimmed(),
+            range_formatted(&args.filtered_code)
+        );
+        println!(
+            "* {:<14} : {:?}",
+            "Filtered size".dimmed(),
+            args.filtered_size
+        );
         println!("* {:<14} : {}", "Method".dimmed(), args.method);
         println!();
 
@@ -131,11 +139,16 @@ impl Logger {
         let status_code = response.status().as_u16();
         let content_size = response.content_length().unwrap_or(0);
 
-        if self.filters.iter().any(|filter| filter.should_filter(&response)) {
+        if self
+            .filters
+            .iter()
+            .any(|filter| filter.should_filter(&response))
+        {
             return;
         }
-        
-        self.progress_bar.println(format!("{:<6} {:<6} {:<8} {}",
+
+        self.progress_bar.println(format!(
+            "{:<6} {:<6} {:<8} {}",
             Self::status_formatter(status_code),
             Self::size_formatter(content_size),
             Self::time_formatter(time),

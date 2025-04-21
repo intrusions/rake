@@ -1,14 +1,17 @@
+use crate::display::filter::ResponseFilter;
 use reqwest::blocking::Response;
-use crate::filter::ResponseFilter;
 
 pub struct ContentSizeFilter {
     filtered_size: Vec<u64>,
-    matched_size: Vec<u64>
+    matched_size: Vec<u64>,
 }
 
 impl ContentSizeFilter {
     pub fn new(filtered_size: Vec<u64>, matched_size: Vec<u64>) -> Self {
-        Self { filtered_size, matched_size }
+        Self {
+            filtered_size,
+            matched_size,
+        }
     }
 }
 

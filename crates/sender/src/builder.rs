@@ -1,13 +1,13 @@
 use crate::Sender;
 
 use crate::SenderArgs;
-use std::{time::Duration, str::FromStr};
-use reqwest::{redirect::Policy, Method};
+use reqwest::{Method, redirect::Policy};
+use std::{str::FromStr, time::Duration};
 
 pub enum SenderBuilderError {
     InvalidHTTPMethod,
     Builder,
-    HostUnreachable
+    HostUnreachable,
 }
 
 impl SenderBuilderError {
@@ -15,7 +15,7 @@ impl SenderBuilderError {
         match self {
             SenderBuilderError::InvalidHTTPMethod => "Method specified is not a valid HTTP method",
             SenderBuilderError::Builder => "TLS backend cannot be initialized, or the resolver cannot load the system configuration",
-            SenderBuilderError::HostUnreachable => "Specified host is unreachable"
+            SenderBuilderError::HostUnreachable => "Specified host is unreachable",
         }
     }
 }
@@ -35,7 +35,7 @@ impl SenderBuilder {
             request_timeout: 5000,
             url: None,
             follow_redirect: false,
-            method: String::from("GET")
+            method: String::from("GET"),
         }
     }
 
@@ -70,16 +70,16 @@ impl SenderBuilder {
 
         let policy = match self.follow_redirect {
             true => Policy::default(),
-            false => Policy::none()
+            false => Policy::none(),
         };
-    
+
         let client = reqwest::blocking::Client::builder()
             .timeout(Duration::from_millis(self.request_timeout))
             .user_agent(&self.user_agent)
             .redirect(policy)
             .build()
             .map_err(|_| SenderBuilderError::Builder)?;
-        
+
         let sender = Sender {
             client,
             method,
@@ -88,13 +88,13 @@ impl SenderBuilder {
                 request_timeout: self.request_timeout,
                 url: self.url.clone().unwrap(),
                 follow_redirect: self.follow_redirect,
-                method: self.method.clone()
-            }
+                method: self.method.clone(),
+            },
         };
-    
+
         match sender.is_reachable() {
             true => Ok(sender),
-            false => Err(SenderBuilderError::HostUnreachable)
+            false => Err(SenderBuilderError::HostUnreachable),
         }
     }
 }

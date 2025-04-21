@@ -1,14 +1,17 @@
+use crate::display::filter::ResponseFilter;
 use reqwest::blocking::Response;
-use crate::filter::ResponseFilter;
 
 pub struct StatusCodeFilter {
     filtered_code: Vec<u16>,
-    matched_code: Vec<u16>
+    matched_code: Vec<u16>,
 }
 
 impl StatusCodeFilter {
     pub fn new(filtered_code: Vec<u16>, matched_code: Vec<u16>) -> Self {
-        Self { filtered_code, matched_code }
+        Self {
+            filtered_code,
+            matched_code,
+        }
     }
 }
 

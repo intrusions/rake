@@ -1,7 +1,7 @@
+pub mod display;
 pub mod fuzzer;
-use sender::SenderArgs;
-use reader::ReaderArgs;
-use logger::LoggerArgs;
+
+use display::DisplayArgs;
 
 #[derive(Clone)]
 pub struct FuzzerArgs {
@@ -15,33 +15,12 @@ pub struct FuzzerArgs {
     pub matched_code: Vec<u16>,
     pub matched_size: Vec<u64>,
     pub follow_redirect: bool,
-    pub method: String
+    pub method: String,
 }
 
-impl From<&FuzzerArgs> for SenderArgs {
-    fn from(args: &FuzzerArgs) -> SenderArgs {
-        SenderArgs {
-            user_agent: args.user_agent.clone(),
-            request_timeout: args.timeout,
-            url: args.url.clone(),
-            follow_redirect: args.follow_redirect,
-            method: args.method.clone()
-        }
-    }
-}
- 
-impl From<&FuzzerArgs> for ReaderArgs {
-    fn from(args: &FuzzerArgs) -> ReaderArgs {
-        ReaderArgs {
-            path: args.wordlist.clone(),
-            threads: args.threads
-        }
-    }
-}
-
-impl From<&FuzzerArgs> for LoggerArgs {
-    fn from(args: &FuzzerArgs) -> LoggerArgs {
-        LoggerArgs {
+impl From<&FuzzerArgs> for DisplayArgs {
+    fn from(args: &FuzzerArgs) -> DisplayArgs {
+        DisplayArgs {
             url: args.url.clone(),
             wordlist: args.wordlist.clone(),
             threads: args.threads,
@@ -51,7 +30,7 @@ impl From<&FuzzerArgs> for LoggerArgs {
             filtered_size: args.filtered_size.clone(),
             matched_code: args.matched_code.clone(),
             matched_size: args.matched_size.clone(),
-            method: args.method.clone()
+            method: args.method.clone(),
         }
     }
 }

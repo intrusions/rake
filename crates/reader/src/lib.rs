@@ -1,9 +1,9 @@
-pub mod reader;
 pub mod builder;
+pub mod reader;
 
 pub use reader::Reader;
 
 pub struct ReaderArgs {
     pub path: String,
-    pub threads: u8
+    pub threads: u8,
 }

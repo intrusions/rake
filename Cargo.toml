@@ -7,8 +7,7 @@ edition = "2024"
 members = [
     "crates/fuzzer",
     "crates/reader",
-    "crates/sender",
-    "crates/logger",
+    "crates/sender"
 ]
 
 [dependencies]

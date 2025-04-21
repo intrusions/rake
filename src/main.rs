@@ -1,6 +1,6 @@
 use args::ArgsSchema;
-use fuzzer::{fuzzer::Fuzzer, FuzzerArgs};
 use clap::Parser;
+use fuzzer::{FuzzerArgs, fuzzer::Fuzzer};
 
 mod args;
 

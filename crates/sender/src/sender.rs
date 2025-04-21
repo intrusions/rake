@@ -1,15 +1,18 @@
 use crate::SenderArgs;
+use reqwest::{
+    Error, Method,
+    blocking::{Client, Response},
+};
 use std::time::{Duration, SystemTime};
-use reqwest::{blocking::{Client, Response}, Method, Error};
 
 pub struct Sender {
     pub client: Client,
     pub args: SenderArgs,
-    pub method: Method
+    pub method: Method,
 }
 
 impl Sender {
-    pub fn is_reachable(&self) -> bool { 
+    pub fn is_reachable(&self) -> bool {
         self.client.get(&self.args.url).send().is_ok()
     }
 
@@ -18,5 +21,5 @@ impl Sender {
         let response = self.client.request(self.method.clone(), url).send()?;
         let elapsed = now.elapsed().unwrap();
         Ok((response, elapsed))
-    } 
+    }
 }

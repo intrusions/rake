@@ -1,9 +1,9 @@
 use clap::Parser;
 use fuzzer::FuzzerArgs;
 use std::{
-    fmt::{Debug, Display},
     convert::TryFrom,
-    str::FromStr
+    fmt::{Debug, Display},
+    str::FromStr,
 };
 
 #[derive(Clone)]
@@ -16,7 +16,7 @@ pub enum RangeOrValue<T> {
 pub struct ArgsSchema {
     /// Target URL to fuzz.
     /// The `{}` placeholder in the URL will be replaced by payloads.
-    /// 
+    ///
     /// Example: `https://rake.io/pages/{}`
     #[arg(short = 'u', long = "url")]
     #[arg(required = true)]
@@ -30,7 +30,11 @@ pub struct ArgsSchema {
     /// Number of threads.
     /// Default is 40
     #[arg(short = 't', long = "threads")]
-    #[arg(default_value_t = 40, hide_default_value = true, hide_possible_values = true)]
+    #[arg(
+        default_value_t = 40,
+        hide_default_value = true,
+        hide_possible_values = true
+    )]
     #[arg(value_parser = clap::value_parser!(u8).range(1..=120))]
     pub threads: u8,
 
@@ -47,7 +51,7 @@ pub struct ArgsSchema {
     pub user_agent: String,
 
     /// List of HTTP status codes to ignore.
-    /// 
+    ///
     /// Example: `200-300, 401` will filter responses with status beetwen 200 and 300, and 401.
     #[arg(short = 'c', long = "filter-code")]
     #[arg(num_args = 1.., value_delimiter = ',')]
@@ -55,15 +59,15 @@ pub struct ArgsSchema {
     pub filtered_code: Vec<RangeOrValue<u16>>,
 
     /// List of HTTP status codes to match.
-    /// 
+    ///
     /// Example: `200-300, 401` will match responses with status beetwen 200 and 300, and 401.
     #[arg(short = 'C', long = "match-code")]
     #[arg(num_args = 1.., value_delimiter = ',')]
     #[arg(value_parser(parse_range_or_value::<u16>))]
     pub matched_code: Vec<RangeOrValue<u16>>,
-    
+
     /// List of content size to ignore.
-    /// 
+    ///
     /// Example: `1000-2000, 2777` will filter responses with content size beetwen 1000 and 2000, and 2777.
     #[arg(short = 's', long = "filter-size")]
     #[arg(num_args = 1.., value_delimiter = ',')]
@@ -71,7 +75,7 @@ pub struct ArgsSchema {
     pub filtered_size: Vec<RangeOrValue<u64>>,
 
     /// List of content size to match.
-    /// 
+    ///
     /// Example: `1000-2000, 2777` will match responses with content size beetwen 1000 and 2000, and 2777.
     #[arg(short = 'S', long = "match-size")]
     #[arg(num_args = 1.., value_delimiter = ',')]
@@ -82,7 +86,7 @@ pub struct ArgsSchema {
     /// Default is false
     #[arg(short = 'r', long = "follow-redirect")]
     #[arg(default_value_t = false)]
-    pub follow_redirect: bool, 
+    pub follow_redirect: bool,
 
     /// HTTP method to use.
     /// Default is GET
@@ -97,17 +101,26 @@ where
     <T as FromStr>::Err: Display,
 {
     if let Some((start, end)) = s.split_once('-') {
-        let start: T = start.trim().parse().map_err(|e| format!("Invalid start of range: {}", e))?;
-        let end: T = end.trim().parse().map_err(|e| format!("Invalid end of range: {}", e))?;
-        
+        let start: T = start
+            .trim()
+            .parse()
+            .map_err(|e| format!("Invalid start of range: {}", e))?;
+        let end: T = end
+            .trim()
+            .parse()
+            .map_err(|e| format!("Invalid end of range: {}", e))?;
+
         if start > end {
             return Err("Start of range cannot be greater than end".into());
         }
 
         Ok(RangeOrValue::Range(start, end))
     } else {
-        let single: T = s.trim().parse().map_err(|e| format!("Invalid number: {}", e))?;
-        
+        let single: T = s
+            .trim()
+            .parse()
+            .map_err(|e| format!("Invalid number: {}", e))?;
+
         Ok(RangeOrValue::Single(single))
     }
 }
@@ -124,10 +137,8 @@ where
             RangeOrValue::Range(start, end) => {
                 let start = start.into();
                 let end = end.into();
-                
-                (start..=end)
-                    .map(|v| T::try_from(v).unwrap())
-                    .collect()
+
+                (start..=end).map(|v| T::try_from(v).unwrap()).collect()
             }
         })
         .collect()
