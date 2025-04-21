@@ -150,8 +150,6 @@ impl Display {
     }
 
     pub fn log_response(&self, response: Response, time: Duration, url: &str) {
-        self.bar_inc_progress();
-
         let status_code = response.status().as_u16();
         let content_size = response.content_length().unwrap_or(0);
         let body = response.text().unwrap();
@@ -173,7 +171,7 @@ impl Display {
         ));
     }
 
-    pub fn bar_inc_progress(&self) {
+    pub fn increment_progress_bar(&self) {
         self.progress_bar.inc(1);
     }
 }

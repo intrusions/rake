@@ -94,9 +94,6 @@ impl SenderBuilder {
             },
         };
 
-        match sender.is_reachable() {
-            true => Ok(sender),
-            false => Err(SenderBuilderError::HostUnreachable),
-        }
+        Ok(sender)
     }
 }

@@ -68,7 +68,7 @@ impl Fuzzer {
                         drop(reader);
 
                         for word in chunk.iter() {
-                            let url = url_template.replace("{}", word);
+                            let url = url_template.replace("{}", word).replace("\n", "");
                             for _ in 0..3 {
                                 match sender.send(&url) {
                                     Ok((response, time)) => {
@@ -76,10 +76,11 @@ impl Fuzzer {
                                         break;
                                     }
                                     Err(_) => {
-                                        std::thread::sleep(std::time::Duration::from_millis(100))
+                                        std::thread::sleep(std::time::Duration::from_millis(100));
                                     }
                                 }
                             }
+                            display.increment_progress_bar();
                         }
                     }
                 });
